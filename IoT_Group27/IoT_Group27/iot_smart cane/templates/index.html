@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>IoT Smart cane</title>
+
+    <!-- Font, Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  </head>
+
+  <body>
+    <div class="grid-container">
+
+      <!-- Header -->
+      <header class="header">
+        <div class="menu-icon" onclick="openSidebar()">
+          <span class="material-symbols-outlined">menu</span>
+        </div>
+        <div class="header-right">
+          <span class="material-symbols-outlined">account_circle</span>
+          <span>Group 27</span>
+        </div>
+      </header>
+      <!-- End Header -->
+
+      <!-- Sidebar -->
+      <aside id="sidebar">
+        <div class="sidebar-title">
+          <div class="sidebar-brand">
+            <span class="material-symbols-outlined">elderly</span> Smart Cane
+          </div>
+          <span class="material-symbols-outlined" onclick="closeSidebar()">close</span>
+        </div>
+        
+        <ul class="sidebar-list">
+          <li class="sidebar-list-item">
+            <a href="#dashboard">
+              <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+          </li>
+          <li class="sidebar-list-item">
+            <a href="#data_analysis">
+              <span class="material-symbols-outlined">analytics</span> Data Analysis
+            </a>
+          </li>
+        </ul>
+      </aside>
+      <!-- End Sidebar -->
+
+      <!-- Main -->
+      <main class="main-container">
+        <div class="dashboard-cards" id="dashboard">
+          <h1>DASHBOARD</h1>
+          <div class="main-cards">
+            <!-- Obstacles Detection -->
+            <div class="card" id="obstacles_detection">
+              <div class="card-inner">
+                <h2>Obstacles Detection</h2>
+                <span class="material-symbols-outlined">motion_sensor_urgent</span>
+              </div>
+              <div class="toggle-icon obstacle-toggle" onclick="toggleObstacle()">
+                <span class="material-symbols-outlined icon">radio_button_checked</span>
+                <h3>Status:&nbsp;<span id="obstacle-status">Off</span></h3>
+              </div>
+              <div>
+                <h3>Middle Sensor Distance:&nbsp;<span id="middle-distance">N/A</span></h3>
+                <h3>Bottom Sensor Distance:&nbsp;<span id="bottom-distance">N/A</span></h3>
+                <h3>Obstacle Detection:&nbsp;<span id="obstacleDetected-status">Safe</span></h3>
+              </div>
+            </div>
+            
+            <!-- Fall Detection -->
+            <div class="card" id="fall_detection">
+              <div class="card-inner">
+                <h2>Fall Detection</h2>
+                <span class="material-symbols-outlined">falling</span>
+              </div>
+              <div class="toggle-icon falling-toggle" onclick="toggleFalling()">
+                <span class="material-symbols-outlined icon">radio_button_checked</span>
+                <h3>Status:&nbsp;<span id="falling-status">Off</span></h3>
+              </div>
+              <div>
+                <h3>Acceleration:&nbsp;<span id="acceleration">N/A</span></h3>
+                <h3>Gyroscope:&nbsp;<span id="gyroscope">N/A</span></h3>
+                <h3>Fall Status:&nbsp;<span id="fall-status">Safe</span></h3>
+              </div>
+            </div>
+
+            <!-- GPS Tracking -->
+            <div class="card" id="gps_tracking">
+              <div class="card-inner">
+                <h2>GPS Tracking</h2>
+                <span class="material-symbols-outlined">explore</span>
+              </div>              
+              <div class="toggle-icon location-toggle" onclick="toggleLocation()">
+                <span class="material-symbols-outlined icon">radio_button_checked</span>
+                <h3>Status:&nbsp;<span id="location-status">Off</span></h3>
+              </div>
+              <div>
+                <h3>Latest Location:&nbsp;<span id="location">N/A</span></h3>
+                <h3>Time:&nbsp;<span id="location-time">N/A</span></h3>
+              </div>
+              <div>
+                <h3>Location History:</h3>
+                <ul id="location-history">
+                  <!-- Location-history -->
+                </ul>
+              </div>
+            </div>
+
+            <!-- Lighting -->
+            <div class="card" id="lighting">
+              <div class="card-inner">
+                  <h2>Lighting</h2>
+                  <span class="material-symbols-outlined">emoji_objects</span>
+              </div>
+              <div class="toggle-icon lighting-toggle" onclick="toggleLighting()">
+                <span class="material-symbols-outlined icon">radio_button_checked</span>
+                <h3>Status:&nbsp;<span id="lighting-status">Off</span></h3>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Data Analysis Section -->
+        <div class="analysis-title" id="data_analysis">
+          <h1>DATA ANALYSIS</h1>
+        </div>
+        <div class="analysis-cards">
+          <!-- Obstacle Detection Analysis -->
+          <div class="analysis-card">
+            <h3>Obstacle Detection Statistics</h3>
+            <p>Obstacles detected today: {{ obstacle_events_today }}</p>
+            <div id="obstacle-chart"></div>
+          </div>
+          <!-- Fall Detection Analysis -->
+          <div class="analysis-card">
+            <h3>Fall Detection Statistics</h3>
+            <p>Total falls this week: {{ total_falls_this_week }}</p>
+            <div id="fall-per-hour-chart"></div>
+          </div>
+          <div class="analysis-card">
+            <h3>Fall Detection Statistics</h3>
+            <div id="falls-chart"></div>
+          </div>
+          <!-- GPS Tracking Analysis -->
+          <div class="analysis-card">
+            <h3>GPS Tracking Analysis</h3>
+            <div id="top-locations-chart"></div> 
+          </div>
+        </div>
+      </main>
+      <!-- End Main -->
+
+      <!-- Include JavaScript variables for chart data -->
+      <script>
+        var obstacleCountsPerHour = {{ obstacle_counts_per_hour | tojson }};
+        var fallsPerDay = {{ falls_per_day | tojson }};
+        var fallCountsPerHour = {{ fall_counts_per_hour | tojson }};
+        var topLocations = {{ top_locations | tojson }};
+      </script>
+
+      <!-- Include Socket.IO and Custom Scripts -->
+      <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+      <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    </div>
+
+    <!-- Fall Alert Modal -->
+    <div id="fallAlertModal" class="modal">
+      <div class="modal-content">
+        <span class="close-button" onclick="closeFallAlertModal()">&times;</span>
+        <p id="fall-alert-message"></p>
+        <button id="see-location-button" onclick="openFallingLocation()">See Falling Location</button>
+      </div>
+    </div>      
+  </body>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>© CITS5506 IoT Smart Cane Project - Group 27</p>
+  </footer>
+</html>
